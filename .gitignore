@@ -1,0 +1,8 @@
+*.pyc
+*.idea
+/idea
+/run_env
+*pychache*
+*pytest*
+*config.py
+*env.py
