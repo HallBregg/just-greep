@@ -1,7 +1,7 @@
 import pytest
 from freezegun import freeze_time
 
-from core_v1.download_data import Grepper
+from core_v2.download_data import Grepper
 
 
 class TestGrepper:

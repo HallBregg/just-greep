@@ -3,8 +3,8 @@ from __future__ import absolute_import
 import psycopg2
 
 from conf import env
-from core_v1.download_data import Grepper
-from core_v1.saver_psql import (
+from core_v2.download_data import Grepper
+from core_v2.saver_psql import (
     get_download_number,
     check_general_existance,
     check_company_existance,
