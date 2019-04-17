@@ -35,11 +35,12 @@ class Runner(Grepper):
         count = 0
         data_all = self.main()
         timestamp = self.timestamp()
+        last_download_number = (get_download_number(self.cursor) or 1) + 1
 
         for data in data_all:
             company_data = data[0]
             offer_data = data[1]
-            last_download_number = (get_download_number(self.cursor) or 1) + 1
+            # last_download_number = (get_download_number(self.cursor) or 1) + 1
             offer_url_id = offer_data.get('offer_url_id')
 
             # Check if such record exists already in 'general' table
@@ -104,7 +105,6 @@ class Runner(Grepper):
 
 if __name__ == '__main__':
     import time
-
     start = time.time()
 
     r = Runner()
