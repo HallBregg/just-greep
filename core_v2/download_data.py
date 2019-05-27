@@ -91,10 +91,11 @@ class Grepper:
 
 
 if __name__ == '__main__':
-    from conf import env
+    # from conf import env
 
     grep = Grepper()
-    grep.control_amount = env.AMOUNT_CONTROL
+    # grep.control_amount = env.AMOUNT_CONTROL
+    grep.control_amount = 50
     data = grep.main()
     timestamp = grep.timestamp()
 
