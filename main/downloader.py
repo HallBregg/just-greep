@@ -2,11 +2,21 @@ from datetime import datetime
 import re
 import requests
 
+class Saver:
+  pass
+
+
+class Runner(Downloader):
+  def main(self):
+    pass
+
 
 class Downloader:
 
     def __init__(self):
         self.offer_url = 'https://justjoin.it/api/offers'
+        self.debug = False
+        self.count_control = None
 
     def download_offers(self):
         """
@@ -47,14 +57,16 @@ class Downloader:
         now = datetime.now()
         date_time = now.strftime('%Y-%m-%d %H:%M:%s')
         return date_time
-
-
+      
     def main(self):
         offers = self.download_offers()
         timestamp = self.timestamp()
+        offers_count = len(offers)
+        i = 0
         for offer in offers:
+        	i += 1
             offer_detail = self.download_offer_detail(offer.get('id'))
-
+            
             offer_data = {
                 'title': offer_detail.get('title'),
                 'skills': self.format_skills(offer_detail.get('skills'), offer.get('skills')),  # noqa
@@ -82,7 +94,17 @@ class Downloader:
             published = offer_detail.get('published_at'),
             download_date = timestamp,
 
+            if self.debug:
+              	print(f'{i}/{offers_count}. {offer_data['title']} / {company_data['name']}'
+                if self.count_control == count:
+                      break
+                      
+			if self.save:
+				pass # Process save functions
 
+                      
 d = Downloader()
+d.debug = True
 d.main()
+                      
 
