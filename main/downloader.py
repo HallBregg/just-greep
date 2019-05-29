@@ -62,9 +62,9 @@ class Downloader:
         offers = self.download_offers()
         timestamp = self.timestamp()
         offers_count = len(offers)
-        i = 0
+        count = 0
         for offer in offers:
-        	i += 1
+        	count += 1
             offer_detail = self.download_offer_detail(offer.get('id'))
             
             offer_data = {
