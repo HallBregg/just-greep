@@ -2,14 +2,6 @@ from datetime import datetime
 import re
 import requests
 
-class Saver:
-  pass
-
-
-class Runner(Downloader):
-  def main(self):
-    pass
-
 
 class Downloader:
 
@@ -17,6 +9,7 @@ class Downloader:
         self.offer_url = 'https://justjoin.it/api/offers'
         self.debug = False
         self.count_control = None
+        self.save = False
 
     def download_offers(self):
         """
@@ -57,6 +50,47 @@ class Downloader:
         now = datetime.now()
         date_time = now.strftime('%Y-%m-%d %H:%M:%s')
         return date_time
+
+    def format_data(self, offer):
+        """
+        Get detailed offers and format it into three dicts:
+        offer, company, other
+        """
+        offer_detail = self.download_offer_detail(offer.get('id'))
+
+        offer_data = {
+            'title': offer_detail.get('title'),
+            'skills': self.format_skills(offer_detail.get('skills'),
+                                         offer.get('skills')),  # noqa
+            'remote': offer_detail.get('remote'),
+            'sallary_from': offer_detail.get('sallary_from'),
+            'sallary_to': offer_detail.get('sallary_to'),
+            'sallary_currency': offer_detail.get('sallary_currency'),
+            'experience': offer_detail.get('experience_level'),
+            'id': offer_detail.get('id'),
+            'body': self.format_body(offer_detail.get('body')),
+        }
+
+        company_data = {
+            'country': offer_detail.get('country_code').lower(),
+            'url': offer_detail.get('company_url'),
+            'size': offer_detail.get('company_size'),
+            'name': offer_detail.get('company_name'),
+            'city': offer_detail.get('city'),
+            'street': offer_detail.get('street'),
+        }
+
+        other_data = {
+            'clause_data': offer_detail.get('information_clause'),
+            'latitude': offer_detail.get('latitude'),
+            'longitude': offer_detail.get('longitude'),
+            'published': offer_detail.get('published_at'),
+        }
+        return {
+            'offer_data': offer_data,
+            'company_data': company_data,
+            'other_data': other_data
+        }
       
     def main(self):
         offers = self.download_offers()
@@ -64,45 +98,20 @@ class Downloader:
         offers_count = len(offers)
         count = 0
         for offer in offers:
-        	count += 1
-            offer_detail = self.download_offer_detail(offer.get('id'))
-            
-            offer_data = {
-                'title': offer_detail.get('title'),
-                'skills': self.format_skills(offer_detail.get('skills'), offer.get('skills')),  # noqa
-                'remote': offer_detail.get('remote'),
-                'sallary_from': offer_detail.get('sallary_from'),
-                'sallary_to': offer_detail.get('sallary_to'),
-                'sallary_currency': offer_detail.get('sallary_currency'),
-                'experience': offer_detail.get('experience_level'),
-                'id': offer_detail.get('id'),
-                'body': self.format_body(offer_detail.get('body')),
-            }
-
-            company_data = {
-                'country': offer_detail.get('country_code').lower(),
-                'url': offer_detail.get('company_url'),
-                'size': offer_detail.get('company_size'),
-                'name': offer_detail.get('company_name'),
-                'city': offer_detail.get('city'),
-                'street': offer_detail.get('street'),
-            }
-
-            clause_data = offer_detail.get('information_clause'),
-            latitude = offer_detail.get('latitude'),
-            longitude = offer_detail.get('longitude'),
-            published = offer_detail.get('published_at'),
-            download_date = timestamp,
+            count += 1
+            data = self.format_data(offer)
 
             if self.debug:
-              	print(f'{i}/{offers_count}. {offer_data['title']} / {company_data['name']}'
+                title = data.get('offer_data')['title']
+                company = data.get('company_data')['name']
+                print(f'{count}/{offers_count} {title} / {company}')  # noqa
                 if self.count_control == count:
-                      break
-                      
-			if self.save:
-				pass # Process save functions
+                    break
 
-                      
+            if self.save:
+                pass  # Process save functions
+
+
 d = Downloader()
 d.debug = True
 d.main()
