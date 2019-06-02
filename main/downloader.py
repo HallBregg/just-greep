@@ -91,7 +91,7 @@ class Downloader:
             'company_data': company_data,
             'other_data': other_data
         }
-      
+
     def main(self):
         offers = self.download_offers()
         timestamp = self.timestamp()
@@ -114,6 +114,6 @@ class Downloader:
 
 d = Downloader()
 d.debug = True
+d.count_control = 20
 d.main()
-                      
 
