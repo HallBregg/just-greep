@@ -60,8 +60,7 @@ class Downloader:
 
         offer_data = {
             'title': offer_detail.get('title'),
-            'skills': self.format_skills(offer_detail.get('skills'),
-                                         offer.get('skills')),  # noqa
+            'skills': self.format_skills(offer_detail.get('skills'), offer.get('skills')),  # noqa
             'remote': offer_detail.get('remote'),
             'sallary_from': offer_detail.get('sallary_from'),
             'sallary_to': offer_detail.get('sallary_to'),
@@ -104,7 +103,8 @@ class Downloader:
             if self.debug:
                 title = data.get('offer_data')['title']
                 company = data.get('company_data')['name']
-                print(f'{count}/{offers_count} {title} / {company}')  # noqa
+                skills = data.get('offer_data')['skills']
+                print(f'{count}/{offers_count} {title} / {company} / {skills}')  # noqa
                 if self.count_control == count:
                     break
 
