@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+import psycopg2
 import re
 import requests
 
@@ -7,9 +9,6 @@ class Downloader:
 
     def __init__(self):
         self.offer_url = 'https://justjoin.it/api/offers'
-        self.debug = False
-        self.count_control = None
-        self.save = False
 
     def download_offers(self):
         """
@@ -66,7 +65,7 @@ class Downloader:
             'sallary_to': offer_detail.get('sallary_to'),
             'sallary_currency': offer_detail.get('sallary_currency'),
             'experience': offer_detail.get('experience_level'),
-            'id': offer_detail.get('id'),
+            'url_id': offer_detail.get('id'),
             'body': self.format_body(offer_detail.get('body')),
         }
 
@@ -91,6 +90,27 @@ class Downloader:
             'other_data': other_data
         }
 
+
+class Saver:
+
+    def __init__(self):
+        self.connection = psycopg2.connect(
+            user='halldb',
+            password='proxycrypto',
+            host='192.168.1.28',
+            port='5432',
+            database='justgrep',
+        )
+        self.cursor = self.connection.cursor()
+
+
+class Runner(Downloader, Saver):
+    def __init__(self):
+        super(Runner, self).__init__()
+        self.debug = False
+        self.count_control = None
+        self.save = False
+
     def main(self):
         offers = self.download_offers()
         timestamp = self.timestamp()
@@ -110,10 +130,4 @@ class Downloader:
 
             if self.save:
                 pass  # Process save functions
-
-
-d = Downloader()
-d.debug = True
-d.count_control = 20
-d.main()
 
