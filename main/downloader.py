@@ -87,7 +87,7 @@ class Downloader:
         return {
             'offer_data': offer_data,
             'company_data': company_data,
-            'other_data': other_data
+            'other_data': other_data,
         }
 
 
@@ -102,6 +102,41 @@ class Saver:
             database='justgrep',
         )
         self.cursor = self.connection.cursor()
+
+    def get_last_download_number(self):
+        """
+        Returns last download number.
+        """
+        sql = '''
+            SELECT MAX(download_number) FROM general;
+        '''
+        self.cursor.execute(sql)
+        return self.cursor.fetchone()
+
+    def check_general_existence(self, offer_url_id, last_download_number):
+        """
+        Returns bool depending on general existence,
+        """
+        sql = '''
+            SELECT EXISTS(
+                SELECT offer_id_url, download_number
+                FROM general WHERE offer_url_id=%s AND download_number=%s
+            );
+        '''
+        self.cursor.execute(sql, (offer_url_id, last_download_number))
+        return self.cursor.fetchone()[0]
+
+    def process_offer(self, offer_data):
+        last_download_number = self.get_last_download_number() or 1
+        general_existence = self.check_general_existence(
+            offer_data.get('url_id'), last_download_number
+        )
+        if general_existence:
+            pass  # don't save
+
+        # does not exist
+
+
 
 
 class Runner(Downloader, Saver):
@@ -129,5 +164,13 @@ class Runner(Downloader, Saver):
                     break
 
             if self.save:
-                pass  # Process save functions
+                self.process_offer(
+                    offer_data=data.get('offer_data')
+                )
 
+
+if __name__ == '__main__':
+    r = Runner()
+    r.debug = True
+    r.count_control = 20
+    r.main()
