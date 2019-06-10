@@ -74,8 +74,8 @@ class Downloader:
             'url': offer_detail.get('company_url'),
             'size': offer_detail.get('company_size'),
             'name': offer_detail.get('company_name'),
-            'city': offer_detail.get('city'),
-            'street': offer_detail.get('street'),
+            'city': offer_detail.get('city').lower(),
+            'street': offer_detail.get('street').lower(),
         }
 
         other_data = {
@@ -89,6 +89,10 @@ class Downloader:
             'company_data': company_data,
             'other_data': other_data,
         }
+
+
+class GeneralExistanceException(Exception):
+    pass
 
 
 class Saver:
@@ -126,17 +130,59 @@ class Saver:
         self.cursor.execute(sql, (offer_url_id, last_download_number))
         return self.cursor.fetchone()[0]
 
+    def check_company_existance(self, company_data):
+        sql = '''
+            SELECT id FROM company
+            WHERE (name=%s AND city=%s AND street=%s)
+            
+        '''
+        self.cursor.execute(
+            sql,
+            (company_data.get('name'), company_data.get('city'), company_data.get('street'))  # noqa
+        )
+        try:
+            # TODO what if there are few the same companies?
+            return self.cursor.fetchone()[0]
+        except TypeError:
+            return None
+
+    def save_offer(self, offer_data):
+        fields = [
+            'title', 'skills', 'remote', 'salary_from', 'salary_to',
+            'salary_currency', 'experience', 'body'
+        ]
+        values = [offer_data.get(field) for field in fields]
+        sql = '''
+            INSERT INTO offer (
+                id, title, skills, remote, salary_from, salary_to,
+                salary_currency, experience, body
+            )
+            VALUES(default, %s, %s, %s, %s, %s, %s, %s, %s) 
+            RETURNING id
+        '''
+        try:
+            self.cursor.execute(sql, tuple(values))
+            return {'offer_id': self.cursor.fetchone()[0]}
+        except psycopg2.DatabaseError as db_error:
+            return {
+                'message': f"Could not save {offer_data.get('title')}",
+                'error': db_error
+            }
+
+    # this should be divided. Now it is incorrect
     def process_offer(self, offer_data):
         last_download_number = self.get_last_download_number() or 1
         general_existence = self.check_general_existence(
             offer_data.get('url_id'), last_download_number
         )
         if general_existence:
-            pass  # don't save
-
-        # does not exist
-
-
+            return
+        offer_response = self.save_offer(offer_data)
+        offer_id = offer_response.get('offer_id')
+        if not offer_id:
+            print(f'{offer_response["message"], offer_response["error"]}')
+            return None
+        return offer_id
 
 
 class Runner(Downloader, Saver):
@@ -164,7 +210,18 @@ class Runner(Downloader, Saver):
                     break
 
             if self.save:
-                self.process_offer(
+
+                # check general existance - if false:
+                # process offer - return offer_id
+
+                # check company existance - if true return company_id if false:
+                # process company - return company_id
+
+                # process general
+
+
+                # other process
+                offer_id = self.process_offer(
                     offer_data=data.get('offer_data')
                 )
 
