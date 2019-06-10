@@ -115,7 +115,7 @@ class Saver:
             SELECT MAX(download_number) FROM general;
         '''
         self.cursor.execute(sql)
-        return self.cursor.fetchone()
+        return self.cursor.fetchone()[0]
 
     def check_general_existence(self, offer_url_id, last_download_number):
         """
@@ -210,15 +210,26 @@ class Runner(Downloader, Saver):
                     break
 
             if self.save:
+                offer_data = data.get('offer_data')
+                company_data = data.get('company_data')
+                other_data = data.get('other_data')
 
-                # check general existance - if false:
+                general_response = self.check_general_existence(
+                    offer_url_id=offer_data.get('url_id'),
+                    last_download_number=self.get_last_download_number()
+                )
+                if general_response:
+                    print(
+                        f'Object: {offer_data.get("url_id")} already exists'
+                    )
+                    continue
+                # TODO
                 # process offer - return offer_id
 
                 # check company existance - if true return company_id if false:
                 # process company - return company_id
 
                 # process general
-
 
                 # other process
                 offer_id = self.process_offer(
