@@ -169,20 +169,8 @@ class Saver:
                 'error': db_error
             }
 
-    # this should be divided. Now it is incorrect
-    def process_offer(self, offer_data):
-        last_download_number = self.get_last_download_number() or 1
-        general_existence = self.check_general_existence(
-            offer_data.get('url_id'), last_download_number
-        )
-        if general_existence:
-            return
-        offer_response = self.save_offer(offer_data)
-        offer_id = offer_response.get('offer_id')
-        if not offer_id:
-            print(f'{offer_response["message"], offer_response["error"]}')
-            return None
-        return offer_id
+    def save_company(self, company_data):
+        pass
 
 
 class Runner(Downloader, Saver):
@@ -223,8 +211,26 @@ class Runner(Downloader, Saver):
                         f'Object: {offer_data.get("url_id")} already exists'
                     )
                     continue
+
+                offer_response = self.save_offer(offer_data)
+                offer_id = offer_response.get('offer_id')
+                if not offer_id:
+                    print(
+                        f'{offer_response["message"], offer_response["error"]}'
+                    )
+                    continue
+
+                company_response = self.check_company_existance(company_data)
+                if company_response:
+                    print(f'Company: {company_data.name} already exists with id: {company_response}')
+                    continue
+                self.save_company(company_data)
+
+
+
+
+
                 # TODO
-                # process offer - return offer_id
 
                 # check company existance - if true return company_id if false:
                 # process company - return company_id
@@ -232,9 +238,7 @@ class Runner(Downloader, Saver):
                 # process general
 
                 # other process
-                offer_id = self.process_offer(
-                    offer_data=data.get('offer_data')
-                )
+
 
 
 if __name__ == '__main__':
