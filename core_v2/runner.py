@@ -112,7 +112,7 @@ if __name__ == '__main__':
     try:
         r.run()
         r.connection.commit()
-        print('Saved all successfully ;)')
+        print('Saved all successfully.')
     except (Exception, psycopg2.DatabaseError) as db_error:
         r.connection.rollback()
         print(f'Error occurred. Could not save. {db_error}')

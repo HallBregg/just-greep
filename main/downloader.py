@@ -226,19 +226,13 @@ class Runner(Downloader, Saver):
                     continue
                 self.save_company(company_data)
 
-
-
-
-
                 # TODO
-
-                # check company existance - if true return company_id if false:
+                # check company existence - if true return company_id if false:
                 # process company - return company_id
 
                 # process general
 
                 # other process
-
 
 
 if __name__ == '__main__':
