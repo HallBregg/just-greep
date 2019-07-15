@@ -42,10 +42,11 @@ def download_specific_offer(offer_url_id):
     return requests.get(offer_url.format(offer_url_id)).json()
 
 
-def handle(debug=False, count=0, random_time=None):
+def handle(debug=False, save=True, **kwargs):
     """Main function. Core of JustGreep"""
     offers = download_offers()
     offers_count = len(offers)
+    count = 0
 
     for offer in offers:
         offer_url_id = offer.get('id')
@@ -82,12 +83,17 @@ def handle(debug=False, count=0, random_time=None):
         }
 
         if debug:
-            if count == 10:
+            if count == kwargs.get('count_limit'):
                 break
             count += 1
             print(f'{count}/{offers_count} {offer_data["title"]} - {company_data["name"]}')
+        if save:
+            # TODO save the records
+            pass
 
+        # Simulate human activity
         random_sleep()
 
 if __name__ == '__main__':
-    handle(debug=True)
+    debug = True
+    handle(debug, count_limit=10)
