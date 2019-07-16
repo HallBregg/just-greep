@@ -7,3 +7,5 @@
 *config.py
 *env.py
 /venv
+/temp
+temp

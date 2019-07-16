@@ -5,9 +5,30 @@ import re
 import requests
 import time
 
+import db_commands as db_exec
+
 
 offers_url = 'https://justjoin.it/api/offers'
 offer_url = 'https://justjoin.it/api/offers/{}'
+
+
+def check_db():
+    # TODO change to os.environ
+    conn = psycopg2.connect(
+        host='db',
+        port='5432',
+        dbname='app',
+        user='postgres',
+        password='postgres'
+    )
+    try:
+        cur = conn.cursor()
+        cur.close()
+        conn.close()
+        return True
+    except (psycopg2.DatabaseError, psycopg2.OperationalError):
+        print('Database error')
+        return False
 
 
 def random_sleep():
@@ -27,9 +48,9 @@ def format_skills(general_skills, detail_skills):
 
 
 def format_body(body):
-        """Returns string of body without html chars"""
-        regex = re.compile('<.*?>')
-        return re.sub(regex, '', body).replace('&nbsp', '').replace(';', ' ')
+    """Returns string of body without html chars"""
+    regex = re.compile('<.*?>')
+    return re.sub(regex, '', body).replace('&nbsp', '').replace(';', ' ')
 
 
 def download_offers():
@@ -42,10 +63,11 @@ def download_specific_offer(offer_url_id):
     return requests.get(offer_url.format(offer_url_id)).json()
 
 
-def handle(debug=False, save=True, **kwargs):
+def handle(debug=False, save=True, cursor **kwargs):
     """Main function. Core of JustGreep"""
     offers = download_offers()
     offers_count = len(offers)
+    last_download_number = db_exec.get_last_download_number(cursor)
     count = 0
 
     for offer in offers:
@@ -86,14 +108,32 @@ def handle(debug=False, save=True, **kwargs):
             if count == kwargs.get('count_limit'):
                 break
             count += 1
-            print(f'{count}/{offers_count} {offer_data["title"]} - {company_data["name"]}')
+            print(f'{count}/{offers_count} {offer_data["title"]} - {company_data["name"]}')  # noqa
+
         if save:
-            # TODO save the records
-            pass
+            if db_exec.check_general_existance(
+                cursor, offer_data['url_id'],
+                last_download_number
+            ):
+                # if record already exists, skip loop
+                continue
+            # TODO add offer
+
+
 
         # Simulate human activity
         random_sleep()
 
 if __name__ == '__main__':
     debug = True
-    handle(debug, count_limit=10)
+    # TODO fix db checking, plan this
+    if check_db():
+        conn = psycopg2.connect(
+            host='db',
+            port='5432',
+            dbname='app',
+            user='postgres',
+            password='postgres'
+        )
+        cursor = conn.cursor()
+        handle(debug, count_limit=10, cursor)
