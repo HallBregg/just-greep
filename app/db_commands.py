@@ -1,3 +1,12 @@
+
+class DatabaseSaveError(Exception):
+    pass
+
+
+class DatabaseExistanceError(Exception):
+    pass
+
+
 def check_general_existance(cursor, url_id, download_number):
     """Check if general connection exists"""
     sql = '''
@@ -10,9 +19,24 @@ def check_general_existance(cursor, url_id, download_number):
     return cursor.fetchone()[0]
 
 
-class DatabaseSaveError(Exception):
-    pass
+def check_company_existance(cursor, name, street, url):
+    """Check if company already exists. If so return its id"""
+    sql = '''
+        SELECT id
+        FROM company
+        WHERE (name=%s AND street=%s AND url=%s
+    '''
+    try:
+        cur.execute(sql, (name, street, url))
+        return cur.fetchone()[0]
 
+    except TypeError:
+        return None
+
+    except psycopg2.DatabaseError:
+        raise DatabaseExistanceError(
+            f'Could not detect if company {name} exists'
+        )
 
 def save_offer(cursor, offer_data):
     """Save offer data and return its id"""
@@ -36,8 +60,8 @@ def save_offer(cursor, offer_data):
         data.append(offer_data.get(field))
     try:
         cursor.execute(sql, (data))
-        id = cursor.fetchone()[0]
-        return id
+        return cursor.fetchone()[0]
+
     except psycopg2.DatabaseError as db_error:
         raise DatabaseSaveError(
             f'Could not save offer {offer_data.get("title")}: {db_error}'

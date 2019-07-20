@@ -119,11 +119,26 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
             ):
                 # if record already exists, skip loop
                 continue
+
+            # offer save
             try:
                 offer_id = db_exec.save_offer(cursor, offer_data)
             except DatabaseSaveError as db_error:
                 print(f'{db_error}')
                 break # continue?
+
+            # company existance
+            try:
+                company_id = db_exec.check_company_existance(
+                    cursor,
+                    company_data.get('name'),
+                    company_data.get('street'),
+                    company_data.get('url')
+                )
+            except DatabaseExistanceError:
+                break # continue?
+
+            # TODO if not company_id add company
 
         # Simulate human activity
         random_sleep()
@@ -140,5 +155,5 @@ if __name__ == '__main__':
             password='postgres'
         )
         cursor = conn.cursor()
-        handle(debug, cursor, count_limit=2)
+        handle(debug, cursor, count_limit=5)
         conn.commit()
