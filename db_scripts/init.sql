@@ -26,7 +26,7 @@ create table if not exists company
 		constraint company_pk
 			primary key,
 	name text not null,
-	size integer,
+	size text,
 	country text,
 	city text not null,
 	street text,

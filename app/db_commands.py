@@ -1,9 +1,11 @@
+import psycopg2
+
 
 class DatabaseSaveError(Exception):
     pass
 
 
-class DatabaseExistanceError(Exception):
+class DatabaseExistenceError(Exception):
     pass
 
 
@@ -24,20 +26,22 @@ def check_company_existance(cursor, name, street, url):
     sql = '''
         SELECT id
         FROM company
-        WHERE (name=%s AND street=%s AND url=%s
+        WHERE (name=%s AND street=%s AND url=%s)
     '''
     try:
-        cur.execute(sql, (name, street, url))
-        return cur.fetchone()[0]
+        cursor.execute(sql, (name, street, url))
+        return cursor.fetchone()[0]
 
     except TypeError:
         return None
 
-    except psycopg2.DatabaseError:
-        raise DatabaseExistanceError(
-            f'Could not detect if company {name} exists'
+    except psycopg2.DatabaseError as db_error:
+        raise DatabaseExistenceError(
+            f'Could not detect if company {name} exists {db_error}'
         )
 
+# TODO Create class with save function
+# and overrite it with each save like: offer, company, general
 def save_offer(cursor, offer_data):
     """Save offer data and return its id"""
     sql = '''
@@ -50,6 +54,7 @@ def save_offer(cursor, offer_data):
     # TODO
     # How to auto-assign. Loop through dict .keys() .values() ???
     # Maybe some fancy data structure?
+    # No url_id that why we need loop like this
     fields = [
         'title', 'skills', 'remote',
         'salary_from', 'salary_to', 'salary_currency',
@@ -65,6 +70,35 @@ def save_offer(cursor, offer_data):
     except psycopg2.DatabaseError as db_error:
         raise DatabaseSaveError(
             f'Could not save offer {offer_data.get("title")}: {db_error}'
+        )
+
+
+def save_company(cursor, company_data, other_data):
+    """Save company data and return its id"""
+    sql = '''
+        INSERT INTO company (
+            id, name, size, country, city, street, url, longitude, latitude
+        )
+        VALUES (default, %s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
+    '''
+
+    # TODO
+    # We need different solution here. Prefarably .values() on dict or .get()
+    data_dict = {**company_data, **other_data}
+    fields = [
+        'name', 'size', 'country', 'city',
+        'street', 'url', 'longitude', 'latitude'
+    ]
+    data = list()
+    for field in fields:
+        data.append(data_dict.get(field))
+    try:
+        cursor.execute(sql, (data))
+        return cursor.fetchone()[0]
+    except psycopg2.DatabaseError as db_error:
+        raise DatabaseSaveError(
+            f'Could not save company {company_data.get("name")}: {db_error}'
         )
 
 

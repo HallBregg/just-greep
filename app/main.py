@@ -111,11 +111,11 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
                 break
             count += 1
             print(f'{count}/{offers_count} {offer_data["title"]} - {company_data["name"]}')  # noqa
+            print(f'{other_data}')
 
         if save:
             if db_exec.check_general_existance(
-                cursor, offer_data['url_id'],
-                last_download_number
+                cursor, offer_data['url_id'], last_download_number
             ):
                 # if record already exists, skip loop
                 continue
@@ -123,11 +123,12 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
             # offer save
             try:
                 offer_id = db_exec.save_offer(cursor, offer_data)
-            except DatabaseSaveError as db_error:
+            except db_exec.DatabaseSaveError as db_error:
                 print(f'{db_error}')
                 break # continue?
 
             # company existance
+            company_id = int()
             try:
                 company_id = db_exec.check_company_existance(
                     cursor,
@@ -135,10 +136,21 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
                     company_data.get('street'),
                     company_data.get('url')
                 )
-            except DatabaseExistanceError:
+            except db_exec.DatabaseExistenceError as db_error:
+                print(f'{db_error}')
                 break # continue?
 
-            # TODO if not company_id add company
+            # save company
+            if not company_id:
+                try:
+                    company_id = db_exec.save_company(
+                        cursor, company_data, other_data
+                    )
+                except db_exec.DatabaseSaveError as db_error:
+                    print(f'{db_error}')
+                    break # continue?
+
+            # TODO connect everything in general table
 
         # Simulate human activity
         random_sleep()
@@ -156,4 +168,4 @@ if __name__ == '__main__':
         )
         cursor = conn.cursor()
         handle(debug, cursor, count_limit=5)
-        conn.commit()
+        # conn.commit()
