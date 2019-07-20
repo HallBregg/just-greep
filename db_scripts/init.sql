@@ -1,3 +1,5 @@
+grant all privileges on database app to postgres;
+
 create table if not exists offer
 (
 	id bigserial not null

@@ -11,6 +11,8 @@ import db_commands as db_exec
 offers_url = 'https://justjoin.it/api/offers'
 offer_url = 'https://justjoin.it/api/offers/{}'
 
+# TODO make this code more OOP
+
 
 def check_db():
     # TODO change to os.environ
@@ -44,7 +46,7 @@ def format_skills(general_skills, detail_skills):
             if skill not in unique_skills:
                 skill['name'] = skill['name'].lower()
                 unique_skills.append(skill)
-        return unique_skills
+        return json.dumps(unique_skills)
 
 
 def format_body(body):
@@ -63,7 +65,7 @@ def download_specific_offer(offer_url_id):
     return requests.get(offer_url.format(offer_url_id)).json()
 
 
-def handle(debug=False, save=True, cursor **kwargs):
+def handle(debug=False, cursor=None, save=True, **kwargs):
     """Main function. Core of JustGreep"""
     offers = download_offers()
     offers_count = len(offers)
@@ -82,9 +84,9 @@ def handle(debug=False, save=True, cursor **kwargs):
             'title': offer_detail.get('title'),
             'skills': format_skills(offer_detail.get('skills'), offer.get('skills')),  # noqa
             'remote': offer_detail.get('remote'),
-            'sallary_from': offer_detail.get('sallary_from'),
-            'sallary_to': offer_detail.get('sallary_to'),
-            'sallary_currency': offer_detail.get('sallary_currency'),
+            'salary_from': offer_detail.get('salary_from'),
+            'salary_to': offer_detail.get('salary_to'),
+            'salary_currency': offer_detail.get('salary_currency'),
             'experience': offer_detail.get('experience_level'),
             'url_id': offer_detail.get('id'),
             'body': format_body(offer_detail.get('body')),
@@ -117,9 +119,11 @@ def handle(debug=False, save=True, cursor **kwargs):
             ):
                 # if record already exists, skip loop
                 continue
-            # TODO add offer
-
-
+            try:
+                offer_id = db_exec.save_offer(cursor, offer_data)
+            except DatabaseSaveError as db_error:
+                print(f'{db_error}')
+                break # continue?
 
         # Simulate human activity
         random_sleep()
@@ -136,4 +140,5 @@ if __name__ == '__main__':
             password='postgres'
         )
         cursor = conn.cursor()
-        handle(debug, count_limit=10, cursor)
+        handle(debug, cursor, count_limit=2)
+        conn.commit()
