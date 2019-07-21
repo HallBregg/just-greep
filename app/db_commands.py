@@ -37,7 +37,7 @@ def check_company_existance(cursor, name, street, url):
 
     except psycopg2.DatabaseError as db_error:
         raise DatabaseExistenceError(
-            f'Could not detect if company {name} exists {db_error}'
+            f'Could not detect if company {name} exists: {db_error}'
         )
 
 # TODO Create class with save function
@@ -65,7 +65,7 @@ def save_offer(cursor, offer_data):
         data.append(offer_data.get(field))
     try:
         cursor.execute(sql, (data))
-        return cursor.fetchone()[0]
+        return int(cursor.fetchone()[0])
 
     except psycopg2.DatabaseError as db_error:
         raise DatabaseSaveError(
@@ -95,12 +95,28 @@ def save_company(cursor, company_data, other_data):
         data.append(data_dict.get(field))
     try:
         cursor.execute(sql, (data))
-        return cursor.fetchone()[0]
+        return int(cursor.fetchone()[0])
     except psycopg2.DatabaseError as db_error:
         raise DatabaseSaveError(
             f'Could not save company {company_data.get("name")}: {db_error}'
         )
 
+
+# def save_general(offer_id, company_id, url_id, published, download_date):
+def save_general(cursor, **kwargs):
+    """Save general table"""
+    sql = '''
+        INSERT INTO general (
+            id, offer_id, company_id, url_id, download_number, published, download_date
+        )
+        VALUES (default, %s, %s, %s, %s, %s, %s)
+    '''
+    try:
+        cursor.execute(sql, (list(kwargs.values())))
+    except psycopg2.DatabaseError as db_error:
+        raise DatabaseSaveError(
+            f'Could not save general data: {db_error}'
+        )
 
 def get_last_download_number(cursor):
     """Return last download number from general table"""

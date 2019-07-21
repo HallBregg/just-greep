@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import psycopg2
 import random
@@ -39,14 +40,20 @@ def random_sleep():
 
 
 def format_skills(general_skills, detail_skills):
-        """Returns list of unique dicts of skills and levels"""
-        unique_skills = list()
-        skills = general_skills + detail_skills
-        for skill in skills:
-            if skill not in unique_skills:
-                skill['name'] = skill['name'].lower()
-                unique_skills.append(skill)
-        return json.dumps(unique_skills)
+    """Returns list of unique dicts of skills and levels"""
+    unique_skills = list()
+    skills = general_skills + detail_skills
+    for skill in skills:
+        if skill not in unique_skills:
+            skill['name'] = skill['name'].lower()
+            unique_skills.append(skill)
+    return json.dumps(unique_skills)
+
+
+def format_date(date):
+    """Changes string data to datetime object"""
+    date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+    return datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def format_body(body):
@@ -65,11 +72,20 @@ def download_specific_offer(offer_url_id):
     return requests.get(offer_url.format(offer_url_id)).json()
 
 
+def get_download_number(cursor):
+    """Return active downalod_number"""
+    last_download_number = db_exec.get_last_download_number(cursor)
+    if not last_download_number:
+        return 1
+    return last_download_number + 1
+
+
 def handle(debug=False, cursor=None, save=True, **kwargs):
     """Main function. Core of JustGreep"""
     offers = download_offers()
     offers_count = len(offers)
-    last_download_number = db_exec.get_last_download_number(cursor)
+    download_number = get_download_number(cursor)
+    download_date = datetime.now()
     count = 0
 
     for offer in offers:
@@ -103,7 +119,7 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
             'clause_data': offer_detail.get('information_clause'),
             'latitude': offer_detail.get('latitude'),
             'longitude': offer_detail.get('longitude'),
-            'published': offer_detail.get('published_at'),
+            'published': format_date(offer_detail.get('published_at')),
         }
 
         if debug:
@@ -111,16 +127,16 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
                 break
             count += 1
             print(f'{count}/{offers_count} {offer_data["title"]} - {company_data["name"]}')  # noqa
-            print(f'{other_data}')
 
         if save:
             if db_exec.check_general_existance(
-                cursor, offer_data['url_id'], last_download_number
+                cursor, offer_data['url_id'], download_number-1
             ):
                 # if record already exists, skip loop
                 continue
 
             # offer save
+            offer_id = int()
             try:
                 offer_id = db_exec.save_offer(cursor, offer_data)
             except db_exec.DatabaseSaveError as db_error:
@@ -151,6 +167,19 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
                     break # continue?
 
             # TODO connect everything in general table
+            general_data = {
+                'offer_id': offer_id,
+                'company_id': company_id,
+                'url_id': offer_data.get('url_id'),
+                'download_number': download_number,
+                'published': other_data.get('published'),
+                'download_date': download_date
+            }
+            try:
+                db_exec.save_general(cursor=cursor, **general_data)
+            except db_exec.DatabaseSaveError as db_error:
+                print(f'{db_error}')
+                break;
 
         # Simulate human activity
         random_sleep()
@@ -167,5 +196,7 @@ if __name__ == '__main__':
             password='postgres'
         )
         cursor = conn.cursor()
-        handle(debug, cursor, count_limit=5)
-        # conn.commit()
+        handle(debug, cursor, count_limit=None)
+        conn.commit()
+        conn.close()
+        cursor.close()
