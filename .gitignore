@@ -2,7 +2,7 @@
 *.idea
 /idea
 /run_env
-*pychache*
+*pycache*
 *pytest*
 *config.py
 *env.py

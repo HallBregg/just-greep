@@ -3,6 +3,7 @@ services:
   app:
     build:
       context: .
+    container_name: "app_service"
     volumes:
       - ./app:/app
     command: >
@@ -16,10 +17,11 @@ services:
       - db
   db:
     image: postgres:10-alpine
+    container_name: "db_service"
     ports:
       - "5430:5432"
     volumes:
-      - ./db_scripts:/db_scripts
+      - ./db_scripts:/docker-entrypoint-initdb.d
       - ./postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=app

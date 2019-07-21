@@ -9,7 +9,7 @@ class DatabaseExistenceError(Exception):
     pass
 
 
-def check_general_existance(cursor, url_id, download_number):
+def check_general_existence(cursor, url_id, download_number):
     """Check if general connection exists"""
     sql = '''
         SELECT EXISTS(
@@ -21,7 +21,7 @@ def check_general_existance(cursor, url_id, download_number):
     return cursor.fetchone()[0]
 
 
-def check_company_existance(cursor, name, street, url):
+def check_company_existence(cursor, name, street, url):
     """Check if company already exists. If so return its id"""
     sql = '''
         SELECT id
@@ -40,8 +40,9 @@ def check_company_existance(cursor, name, street, url):
             f'Could not detect if company {name} exists: {db_error}'
         )
 
+
 # TODO Create class with save function
-# and overrite it with each save like: offer, company, general
+# and overwrite it with each save like: offer, company, general
 def save_offer(cursor, offer_data):
     """Save offer data and return its id"""
     sql = '''
@@ -84,7 +85,7 @@ def save_company(cursor, company_data, other_data):
     '''
 
     # TODO
-    # We need different solution here. Prefarably .values() on dict or .get()
+    # We need different solution here. Preferably .values() on dict or .get()
     data_dict = {**company_data, **other_data}
     fields = [
         'name', 'size', 'country', 'city',
@@ -117,6 +118,7 @@ def save_general(cursor, **kwargs):
         raise DatabaseSaveError(
             f'Could not save general data: {db_error}'
         )
+
 
 def get_last_download_number(cursor):
     """Return last download number from general table"""

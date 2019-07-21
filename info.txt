@@ -1,0 +1,26 @@
+To configure DB:
+  - execute init.sql inside db (will automate this in future)  "\i <path_to_sql>"
+on production run like: docker-compose up --abort-on-container-exit
+.
+├── app
+│   ├── db_commands.py
+│   ├── __init__.py
+│   ├── main.py
+│   └── __pycache__
+│       └── db_commands.cpython-37.pyc
+├── db_scripts
+│   └── init.sql
+├── docker-compose.yml
+├── Dockerfile
+├── __init__.py
+├── postgres_data [dir]
+├── README.md
+├── requirements.txt
+├── temp
+    └── temp.py
+
+TODO - important
+(done) Need to add auto db configuration while docker-compose up
+Add script parameters to control count_amount, save, debug
+Fix all TODOs
+Fix handle params

@@ -91,7 +91,7 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
     for offer in offers:
         offer_url_id = offer.get('id')
         if not offer_url_id:
-            # skip the loop if no id (ipossible ?)
+            # skip the loop if no id (impossible ?)
             continue
 
         offer_detail = download_specific_offer(offer_url_id)
@@ -129,7 +129,7 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
             print(f'{count}/{offers_count} {offer_data["title"]} - {company_data["name"]}')  # noqa
 
         if save:
-            if db_exec.check_general_existance(
+            if db_exec.check_general_existence(
                 cursor, offer_data['url_id'], download_number-1
             ):
                 # if record already exists, skip loop
@@ -143,10 +143,10 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
                 print(f'{db_error}')
                 break # continue?
 
-            # company existance
+            # company existence
             company_id = int()
             try:
-                company_id = db_exec.check_company_existance(
+                company_id = db_exec.check_company_existence(
                     cursor,
                     company_data.get('name'),
                     company_data.get('street'),
@@ -154,7 +154,7 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
                 )
             except db_exec.DatabaseExistenceError as db_error:
                 print(f'{db_error}')
-                break # continue?
+                break  # continue?
 
             # save company
             if not company_id:
@@ -164,7 +164,7 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
                     )
                 except db_exec.DatabaseSaveError as db_error:
                     print(f'{db_error}')
-                    break # continue?
+                    break  # continue?
 
             # TODO connect everything in general table
             general_data = {
@@ -179,10 +179,11 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
                 db_exec.save_general(cursor=cursor, **general_data)
             except db_exec.DatabaseSaveError as db_error:
                 print(f'{db_error}')
-                break;
+                break
 
         # Simulate human activity
         random_sleep()
+
 
 if __name__ == '__main__':
     debug = True
@@ -196,7 +197,7 @@ if __name__ == '__main__':
             password='postgres'
         )
         cursor = conn.cursor()
-        handle(debug, cursor, count_limit=None)
+        handle(debug, cursor, count_limit=10)
         conn.commit()
         conn.close()
         cursor.close()
