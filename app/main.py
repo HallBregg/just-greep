@@ -72,6 +72,14 @@ def download_specific_offer(offer_url_id):
     return requests.get(offer_url.format(offer_url_id)).json()
 
 
+def try_lower(value):
+    """Try to make string lower."""
+    try:
+        return value.lower()
+    except AttributeError:
+        return ''
+
+
 def get_download_number(cursor):
     """Return active downalod_number"""
     last_download_number = db_exec.get_last_download_number(cursor)
@@ -108,12 +116,12 @@ def handle(debug=False, cursor=None, save=True, **kwargs):
             'body': format_body(offer_detail.get('body')),
         }
         company_data = {
-            'country': offer_detail.get('country_code').lower(),
+            'country': try_lower(offer_detail.get('country_code')),
             'url': offer_detail.get('company_url'),
             'size': offer_detail.get('company_size'),
             'name': offer_detail.get('company_name'),
-            'city': offer_detail.get('city').lower(),
-            'street': offer_detail.get('street').lower(),
+            'city': try_lower(offer_detail.get('city')),
+            'street': try_lower(offer_detail.get('street')),
         }
         other_data = {
             'clause_data': offer_detail.get('information_clause'),
