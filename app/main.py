@@ -8,6 +8,8 @@ import time
 
 import db_commands as db_exec
 
+from os import environ
+
 
 offers_url = 'https://justjoin.it/api/offers'
 offer_url = 'https://justjoin.it/api/offers/{}'
@@ -16,13 +18,12 @@ offer_url = 'https://justjoin.it/api/offers/{}'
 
 
 def check_db():
-    # TODO change to os.environ
     conn = psycopg2.connect(
-        host='db',
-        port='5432',
-        dbname='app',
-        user='postgres',
-        password='postgres'
+        host= environ.get('HOST'),
+        port=environ.get('PORT'),
+        dbname=environ.get('DBNAME'),
+        user=environ.get('USER'),
+        password=environ.get('PASS')
     )
     try:
         cur = conn.cursor()
@@ -198,11 +199,11 @@ if __name__ == '__main__':
     # TODO fix db checking, plan this
     if check_db():
         conn = psycopg2.connect(
-            host='db',
-            port='5432',
-            dbname='app',
-            user='postgres',
-            password='postgres'
+            host= environ.get('HOST'),
+            port=environ.get('PORT'),
+            dbname=environ.get('DBNAME'),
+            user=environ.get('USER'),
+            password=environ.get('PASS')
         )
         cursor = conn.cursor()
         handle(debug, cursor, count_limit=10)
